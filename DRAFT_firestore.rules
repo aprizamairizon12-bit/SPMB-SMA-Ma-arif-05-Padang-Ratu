@@ -1,0 +1,318 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Safety Net (Default-Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'aprizamairizon12@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidStatus(status) {
+      return status is string && status.size() <= 40 && (
+        status == 'Menunggu Verifikasi' ||
+        status == 'Perlu Perbaikan Data' ||
+        status == 'Terverifikasi' ||
+        status == 'Diterima' ||
+        status == 'Tidak Diterima'
+      );
+    }
+
+    // Blueprint Validation Helpers
+    function isValidPublicConfig(data) {
+      return data.keys().hasAll([
+        'schoolName', 'shortName', 'npsn', 'academicYear',
+        'registrationOpen', 'startDate', 'endDate', 'announcementDate',
+        'regPrefix', 'payloadJson', 'updatedBy', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'schoolName', 'shortName', 'npsn', 'academicYear',
+        'registrationOpen', 'startDate', 'endDate', 'announcementDate',
+        'regPrefix', 'payloadJson', 'updatedBy', 'updatedAt'
+      ]) &&
+      data.schoolName is string && data.schoolName.size() >= 1 && data.schoolName.size() <= 200 &&
+      data.shortName is string && data.shortName.size() >= 1 && data.shortName.size() <= 100 &&
+      data.npsn is string && data.npsn.size() <= 30 &&
+      data.academicYear is string && data.academicYear.size() >= 4 && data.academicYear.size() <= 30 &&
+      data.registrationOpen is bool &&
+      data.startDate is string && data.startDate.size() <= 40 &&
+      data.endDate is string && data.endDate.size() <= 40 &&
+      data.announcementDate is string && data.announcementDate.size() <= 40 &&
+      data.regPrefix is string && data.regPrefix.size() >= 2 && data.regPrefix.size() <= 30 &&
+      data.payloadJson is string && data.payloadJson.size() >= 2 && data.payloadJson.size() <= 450000 &&
+      data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128 &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidApplication(data) {
+      return data.keys().hasAll([
+        'regNumber', 'lookupKey', 'fullName', 'nik', 'nisn', 'gender',
+        'birthPlace', 'birthDate', 'religion', 'address', 'village',
+        'district', 'regency', 'province', 'phone', 'fatherName',
+        'motherName', 'parentJob', 'parentPhone', 'guardianName',
+        'parentAddress', 'originSchool', 'originNpsn', 'originAddress',
+        'graduationYear', 'selectedProgram', 'customFieldsJson',
+        'documentsJson', 'docVerificationJson', 'status', 'revisionNotes',
+        'submittedDate', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'regNumber', 'lookupKey', 'fullName', 'nik', 'nisn', 'gender',
+        'birthPlace', 'birthDate', 'religion', 'address', 'village',
+        'district', 'regency', 'province', 'phone', 'fatherName',
+        'motherName', 'parentJob', 'parentPhone', 'guardianName',
+        'parentAddress', 'originSchool', 'originNpsn', 'originAddress',
+        'graduationYear', 'selectedProgram', 'customFieldsJson',
+        'documentsJson', 'docVerificationJson', 'status', 'revisionNotes',
+        'submittedDate', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.regNumber) && data.regNumber.size() <= 64 &&
+      isValidId(data.lookupKey) && data.lookupKey.size() <= 128 &&
+      data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 150 &&
+      data.nik is string && data.nik.size() <= 32 &&
+      isValidId(data.nisn) && data.nisn.size() <= 32 &&
+      data.gender is string && data.gender.size() <= 20 && (data.gender == 'Laki-laki' || data.gender == 'Perempuan') &&
+      data.birthPlace is string && data.birthPlace.size() <= 100 &&
+      data.birthDate is string && data.birthDate.size() <= 30 &&
+      data.religion is string && data.religion.size() <= 40 &&
+      data.address is string && data.address.size() <= 400 &&
+      data.village is string && data.village.size() <= 100 &&
+      data.district is string && data.district.size() <= 100 &&
+      data.regency is string && data.regency.size() <= 100 &&
+      data.province is string && data.province.size() <= 100 &&
+      data.phone is string && data.phone.size() <= 40 &&
+      data.fatherName is string && data.fatherName.size() <= 150 &&
+      data.motherName is string && data.motherName.size() <= 150 &&
+      data.parentJob is string && data.parentJob.size() <= 150 &&
+      data.parentPhone is string && data.parentPhone.size() <= 40 &&
+      data.guardianName is string && data.guardianName.size() <= 150 &&
+      data.parentAddress is string && data.parentAddress.size() <= 400 &&
+      data.originSchool is string && data.originSchool.size() <= 200 &&
+      data.originNpsn is string && data.originNpsn.size() <= 30 &&
+      data.originAddress is string && data.originAddress.size() <= 400 &&
+      data.graduationYear is string && data.graduationYear.size() <= 10 &&
+      data.selectedProgram is string && data.selectedProgram.size() <= 120 &&
+      data.customFieldsJson is string && data.customFieldsJson.size() <= 50000 &&
+      data.documentsJson is string && data.documentsJson.size() <= 750000 &&
+      data.docVerificationJson is string && data.docVerificationJson.size() <= 20000 &&
+      isValidStatus(data.status) &&
+      data.revisionNotes is string && data.revisionNotes.size() <= 2000 &&
+      data.submittedDate is string && data.submittedDate.size() <= 40 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidStatusLookup(data) {
+      return data.keys().hasAll([
+        'regNumber', 'nisn', 'studentName', 'birthPlace', 'birthDate',
+        'originSchool', 'selectedProgram', 'status', 'revisionNotes',
+        'docSummary', 'submittedDate', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'regNumber', 'nisn', 'studentName', 'birthPlace', 'birthDate',
+        'originSchool', 'selectedProgram', 'status', 'revisionNotes',
+        'docSummary', 'submittedDate', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.regNumber) && data.regNumber.size() <= 64 &&
+      isValidId(data.nisn) && data.nisn.size() <= 32 &&
+      data.studentName is string && data.studentName.size() >= 1 && data.studentName.size() <= 150 &&
+      data.birthPlace is string && data.birthPlace.size() <= 100 &&
+      data.birthDate is string && data.birthDate.size() <= 30 &&
+      data.originSchool is string && data.originSchool.size() <= 200 &&
+      data.selectedProgram is string && data.selectedProgram.size() <= 120 &&
+      isValidStatus(data.status) &&
+      data.revisionNotes is string && data.revisionNotes.size() <= 2000 &&
+      data.docSummary is string && data.docSummary.size() <= 1000 &&
+      data.submittedDate is string && data.submittedDate.size() <= 40 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll([
+        'uid', 'email', 'displayName', 'role', 'active', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid', 'email', 'displayName', 'role', 'active', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.uid) &&
+      data.email is string && data.email.size() >= 3 && data.email.size() <= 200 &&
+      data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 150 &&
+      data.role is string && data.role.size() <= 40 && (
+        data.role == 'Super Admin' ||
+        data.role == 'Ketua Panitia' ||
+        data.role == 'Verifikator'
+      ) &&
+      data.active is bool &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidActivityLog(data) {
+      return data.keys().hasAll([
+        'actorUid', 'actorEmail', 'action', 'target', 'details', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'actorUid', 'actorEmail', 'action', 'target', 'details', 'createdAt'
+      ]) &&
+      isValidId(data.actorUid) &&
+      data.actorEmail is string && data.actorEmail.size() >= 3 && data.actorEmail.size() <= 200 &&
+      data.action is string && data.action.size() >= 1 && data.action.size() <= 120 &&
+      data.target is string && data.target.size() >= 1 && data.target.size() <= 200 &&
+      data.details is string && data.details.size() <= 1000 &&
+      data.createdAt is timestamp;
+    }
+
+    // 1. Public School & SPMB Config
+    match /public_config/{configId} {
+      allow get: if isValidId(configId);
+      allow list: if false;
+      allow create: if isValidId(configId) && isValidPublicConfig(incoming()) && incoming().updatedBy == request.auth.uid && incoming().updatedAt == request.time && isAdmin();
+      allow update: if isValidPublicConfig(incoming()) && isValidId(configId) && incoming().updatedBy == request.auth.uid && incoming().updatedAt == request.time && isAdmin() && (
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'schoolName', 'shortName', 'npsn', 'academicYear',
+          'registrationOpen', 'startDate', 'endDate', 'announcementDate',
+          'regPrefix', 'payloadJson', 'updatedBy', 'updatedAt'
+        ])
+      );
+      allow delete: if isValidId(configId) && isAdmin();
+    }
+
+    // 2. Full Applications (Strictly Admin Read/List, Public Atomic Create)
+    match /applications/{regNumber} {
+      allow get: if isValidId(regNumber) && isAdmin();
+      allow list: if isAdmin() && existing().regNumber is string;
+      allow create: if isValidId(regNumber) &&
+        isValidApplication(incoming()) &&
+        incoming().regNumber == regNumber &&
+        incoming().lookupKey == regNumber + '_' + incoming().nisn &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (
+          incoming().status == 'Menunggu Verifikasi' ||
+          isAdmin()
+        ) &&
+        existsAfter(/databases/$(database)/documents/status_lookups/$(incoming().lookupKey));
+
+      allow update: if isValidApplication(incoming()) &&
+        isValidId(regNumber) &&
+        incoming().regNumber == existing().regNumber &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        isAdmin() && (
+          // Action 1: Status & Verification Update
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'status', 'revisionNotes', 'docVerificationJson', 'updatedAt'
+          ]) ||
+          // Action 2: Full Admin Biodata & Document Edit / Restore
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'lookupKey', 'fullName', 'nik', 'nisn', 'gender',
+            'birthPlace', 'birthDate', 'religion', 'address', 'village',
+            'district', 'regency', 'province', 'phone', 'fatherName',
+            'motherName', 'parentJob', 'parentPhone', 'guardianName',
+            'parentAddress', 'originSchool', 'originNpsn', 'originAddress',
+            'graduationYear', 'selectedProgram', 'customFieldsJson',
+            'documentsJson', 'docVerificationJson', 'status', 'revisionNotes',
+            'submittedDate', 'updatedAt'
+          ])
+        );
+
+      allow delete: if isValidId(regNumber) && isAdmin();
+    }
+
+    // 3. Privacy-Safe Status Lookups (Deterministic Direct Get Only for Public)
+    match /status_lookups/{lookupKey} {
+      allow get: if isValidId(lookupKey);
+      allow list: if isAdmin() && existing().regNumber is string;
+      allow create: if isValidId(lookupKey) &&
+        isValidStatusLookup(incoming()) &&
+        lookupKey == incoming().regNumber + '_' + incoming().nisn &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (
+          incoming().status == 'Menunggu Verifikasi' ||
+          isAdmin()
+        ) &&
+        existsAfter(/databases/$(database)/documents/applications/$(incoming().regNumber));
+
+      allow update: if isValidStatusLookup(incoming()) &&
+        isValidId(lookupKey) &&
+        incoming().regNumber == existing().regNumber &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        isAdmin() && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'nisn', 'studentName', 'birthPlace', 'birthDate',
+            'originSchool', 'selectedProgram', 'status', 'revisionNotes',
+            'docSummary', 'submittedDate', 'updatedAt'
+          ])
+        );
+
+      allow delete: if isValidId(lookupKey) && isAdmin();
+    }
+
+    // 4. Admin Accounts
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (
+        (isVerifiedUser() && request.auth.uid == adminId) ||
+        isAdmin()
+      );
+      allow list: if isAdmin() && existing().uid is string;
+      allow create: if isValidId(adminId) &&
+        isValidAdminUser(incoming()) &&
+        incoming().uid == adminId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+      allow update: if isValidAdminUser(incoming()) &&
+        isValidId(adminId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        isAdmin() && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'email', 'displayName', 'role', 'active', 'updatedAt'
+          ])
+        );
+      allow delete: if isValidId(adminId) && isAdmin();
+    }
+
+    // 5. Activity Audit Logs (Immutable)
+    match /activity_logs/{logId} {
+      allow get: if isValidId(logId) && isAdmin();
+      allow list: if isAdmin() && existing().actorUid is string;
+      allow create: if isValidId(logId) &&
+        isValidActivityLog(incoming()) &&
+        incoming().actorUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        isAdmin();
+      allow update, delete: if false;
+    }
+  }
+}

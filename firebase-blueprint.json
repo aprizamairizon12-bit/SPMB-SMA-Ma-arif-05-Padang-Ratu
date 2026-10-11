@@ -1,0 +1,220 @@
+{
+  "entities": {
+    "PublicConfig": {
+      "title": "PublicConfig",
+      "description": "Stores editable school identity, website content sections, and SPMB 2027/2028 configuration.",
+      "type": "object",
+      "properties": {
+        "schoolName": { "type": "string", "maxLength": 200 },
+        "shortName": { "type": "string", "maxLength": 100 },
+        "npsn": { "type": "string", "maxLength": 30 },
+        "academicYear": { "type": "string", "maxLength": 30 },
+        "registrationOpen": { "type": "boolean" },
+        "startDate": { "type": "string", "maxLength": 40 },
+        "endDate": { "type": "string", "maxLength": 40 },
+        "announcementDate": { "type": "string", "maxLength": 40 },
+        "regPrefix": { "type": "string", "maxLength": 30 },
+        "payloadJson": { "type": "string", "maxLength": 450000 },
+        "updatedBy": { "type": "string", "maxLength": 128 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "schoolName",
+        "shortName",
+        "npsn",
+        "academicYear",
+        "registrationOpen",
+        "startDate",
+        "endDate",
+        "announcementDate",
+        "regPrefix",
+        "payloadJson",
+        "updatedBy",
+        "updatedAt"
+      ]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "Contains full applicant PII, parent details, origin school, and uploaded documents (strictly admin-only read).",
+      "type": "object",
+      "properties": {
+        "regNumber": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "lookupKey": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "fullName": { "type": "string", "maxLength": 150 },
+        "nik": { "type": "string", "maxLength": 32 },
+        "nisn": { "type": "string", "maxLength": 32, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "gender": { "type": "string", "enum": ["Laki-laki", "Perempuan"], "maxLength": 20 },
+        "birthPlace": { "type": "string", "maxLength": 100 },
+        "birthDate": { "type": "string", "maxLength": 30 },
+        "religion": { "type": "string", "maxLength": 40 },
+        "address": { "type": "string", "maxLength": 400 },
+        "village": { "type": "string", "maxLength": 100 },
+        "district": { "type": "string", "maxLength": 100 },
+        "regency": { "type": "string", "maxLength": 100 },
+        "province": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 40 },
+        "fatherName": { "type": "string", "maxLength": 150 },
+        "motherName": { "type": "string", "maxLength": 150 },
+        "parentJob": { "type": "string", "maxLength": 150 },
+        "parentPhone": { "type": "string", "maxLength": 40 },
+        "guardianName": { "type": "string", "maxLength": 150 },
+        "parentAddress": { "type": "string", "maxLength": 400 },
+        "originSchool": { "type": "string", "maxLength": 200 },
+        "originNpsn": { "type": "string", "maxLength": 30 },
+        "originAddress": { "type": "string", "maxLength": 400 },
+        "graduationYear": { "type": "string", "maxLength": 10 },
+        "selectedProgram": { "type": "string", "maxLength": 120 },
+        "customFieldsJson": { "type": "string", "maxLength": 50000 },
+        "documentsJson": { "type": "string", "maxLength": 750000 },
+        "docVerificationJson": { "type": "string", "maxLength": 20000 },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Menunggu Verifikasi",
+            "Perlu Perbaikan Data",
+            "Terverifikasi",
+            "Diterima",
+            "Tidak Diterima"
+          ],
+          "maxLength": 40
+        },
+        "revisionNotes": { "type": "string", "maxLength": 2000 },
+        "submittedDate": { "type": "string", "maxLength": 40 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "regNumber",
+        "lookupKey",
+        "fullName",
+        "nik",
+        "nisn",
+        "gender",
+        "birthPlace",
+        "birthDate",
+        "religion",
+        "address",
+        "village",
+        "district",
+        "regency",
+        "province",
+        "phone",
+        "fatherName",
+        "motherName",
+        "parentJob",
+        "parentPhone",
+        "guardianName",
+        "parentAddress",
+        "originSchool",
+        "originNpsn",
+        "originAddress",
+        "graduationYear",
+        "selectedProgram",
+        "customFieldsJson",
+        "documentsJson",
+        "docVerificationJson",
+        "status",
+        "revisionNotes",
+        "submittedDate",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StatusLookup": {
+      "title": "StatusLookup",
+      "description": "Privacy-safe registration status card accessible via deterministic composite key regNumber_nisn.",
+      "type": "object",
+      "properties": {
+        "regNumber": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "nisn": { "type": "string", "maxLength": 32, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "studentName": { "type": "string", "maxLength": 150 },
+        "birthPlace": { "type": "string", "maxLength": 100 },
+        "birthDate": { "type": "string", "maxLength": 30 },
+        "originSchool": { "type": "string", "maxLength": 200 },
+        "selectedProgram": { "type": "string", "maxLength": 120 },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Menunggu Verifikasi",
+            "Perlu Perbaikan Data",
+            "Terverifikasi",
+            "Diterima",
+            "Tidak Diterima"
+          ],
+          "maxLength": 40
+        },
+        "revisionNotes": { "type": "string", "maxLength": 2000 },
+        "docSummary": { "type": "string", "maxLength": 1000 },
+        "submittedDate": { "type": "string", "maxLength": 40 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "regNumber",
+        "nisn",
+        "studentName",
+        "birthPlace",
+        "birthDate",
+        "originSchool",
+        "selectedProgram",
+        "status",
+        "revisionNotes",
+        "docSummary",
+        "submittedDate",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized school committee and administrator account record.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "maxLength": 200 },
+        "displayName": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["Super Admin", "Ketua Panitia", "Verifikator"], "maxLength": 40 },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "role", "active", "createdAt", "updatedAt"]
+    },
+    "ActivityLog": {
+      "title": "ActivityLog",
+      "description": "Immutable audit log of administrator actions.",
+      "type": "object",
+      "properties": {
+        "actorUid": { "type": "string", "maxLength": 128 },
+        "actorEmail": { "type": "string", "maxLength": 200 },
+        "action": { "type": "string", "maxLength": 120 },
+        "target": { "type": "string", "maxLength": 200 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["actorUid", "actorEmail", "action", "target", "details", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/public_config/{configId}": {
+      "schema": { "$ref": "#/entities/PublicConfig" },
+      "description": "Public school profile and SPMB configuration."
+    },
+    "/applications/{regNumber}": {
+      "schema": { "$ref": "#/entities/Application" },
+      "description": "Private full student applications containing PII and uploaded documents."
+    },
+    "/status_lookups/{lookupKey}": {
+      "schema": { "$ref": "#/entities/StatusLookup" },
+      "description": "Privacy-safe registration lookup keyed by regNumber_nisn."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Authorized admin accounts."
+    },
+    "/activity_logs/{logId}": {
+      "schema": { "$ref": "#/entities/ActivityLog" },
+      "description": "Admin activity audit trail."
+    }
+  }
+}
